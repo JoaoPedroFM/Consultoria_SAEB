@@ -1,0 +1,466 @@
+
+```{r}
+## Importando pacotes
+#devtools::install_github("rstudio/sparklyr")
+{library(sparklyr)
+library(dplyr)
+library(DBI)
+library(magrittr)
+library(ggplot2)}
+
+## Iniciando spark
+conf <- spark_config()
+
+
+conf$`sparklyr.shell.driver-memory` <- "8G"
+
+sc <- spark_connect(master = "local", config = conf)
+
+
+## Importando dados // Lendo base já tratada 
+dados <- spark_read_csv(sc=sc,path='TS_ALUNO_5EF.csv',delimiter = ";")
+base <- spark_read_parquet(sc=sc,path='dados_parquet')
+
+
+base_saeb <- collect(base)
+```
+
+```{r}
+# 
+# ## Realizando tratamentos necessários para realização dos objetivos
+# dados2 <- filter(dados,NU_ANO==2016,
+#                          TP_ST_CONCLUSAO %in% c(1,2),
+#                          SG_UF_RESIDENCIA %in% c('RJ','SP','MG','ES'),
+#                          IN_TREINEIRO==0,
+#                          TP_PRESENCA_LC==1,
+#                          TP_PRESENCA_CH==1)
+# 
+# 
+# dados3 <- select(dados2, TP_COR_RACA, TP_SEXO, TP_ESCOLA, Q005, Q026, Q002, Q006, NU_IDADE,
+#                  NU_NOTA_REDACAO, NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_MT,Q047, SG_UF_RESIDENCIA)
+# 
+# 
+# 
+# dados4 <- rename(dados3,R= NU_NOTA_REDACAO, CNT= NU_NOTA_CN, CHT= NU_NOTA_CH, LCT= NU_NOTA_LC,
+#                          MT= NU_NOTA_MT,RACA = TP_COR_RACA,SEXO = TP_SEXO,ESCOLA = TP_ESCOLA,
+#                          MORA = Q005,TRAB= Q026,ESCOL_MAE= Q002,IDADE= NU_IDADE,RENDA= Q006, EM=Q047, UF=SG_UF_RESIDENCIA)
+# 
+# dados5 <- mutate(dados4, FORMULA= (2*R + CNT + 2*CHT + LCT + MT)/7)
+# 
+# dados6 <- na.omit(dados5)
+# 
+# #base <- collect(dados6)
+
+
+
+## Mesmos tratamentos, porém usando a linguagem SQL
+#
+# dados_sql <- tbl(sc, dbplyr::sql("SELECT TP_COR_RACA as RACA, TP_SEXO as SEXO,
+#                  TP_ESCOLA as ESCOLA , Q005 as MORA, Q026 as TRAB, Q002 as ESCOL_MAE,
+#                  Q006 as RENDA, NU_IDADE as IDADE,NU_NOTA_REDACAO as R, NU_NOTA_CN as CNT,                       NU_NOTA_CH as CHT, NU_NOTA_LC as LCT, NU_NOTA_MT as NT, Q047 as EM
+#                  FROM TS_ALUNO_5EF_090e5285_e831_4ce4_89c0_eae47731ffa6
+#                  WHERE NU_ANO = 2016 and IN_TREINEIRO = 0 and TP_PRESENCA_LC = 1 and
+#                  TP_PRESENCA_CH = 1 and TP_ST_CONCLUSAO in (1,2) and
+#                  SG_UF_RESIDENCIA in ('RJ','SP','MG','ES')"))
+
+# dados_sql
+
+## Salvando a tabela em connections
+#copy_to(sc,dados_sql,"dados_sql",memory = F)
+
+## Salavando dados tratados para facilitar futuras aberturas do arquivo, e poder compartilhar
+## com outros integrantes do projeto
+#spark_write_parquet(dados6,file='dados_parquet')
+```
+
+```{r}
+## Sumário para cada classe de concorrência
+
+#Dentro do Grupo A1
+base |> 
+  filter(RENDA %in% c("A","B","C"),
+               EM == "A") |> 
+  rename(RA1=R, CNTA1=CNT, CHTA1=CHT, LCTA1=LCT, MTA1=MT, FORMULAA1=FORMULA) |> 
+  select(c(RA1, CNTA1, CHTA1, LCTA1, MTA1, FORMULAA1)) |> 
+  summary()
+
+
+#Fora do Grupo A1
+base |> 
+  filter(RENDA %in% c("A","B","C"),
+               EM == "A") |> 
+  rename(RFA1=R, CNTFA1=CNT, CHTFA1=CHT, LCTFA1=LCT, MTFA1=MT, FORMULAFA1=FORMULA) |> 
+  select(c(RFA1, CNTFA1, CHTFA1, LCTFA1, MTFA1, FORMULAFA1)) |> 
+  summary()
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A2
+base |> 
+  filter(RENDA %in% c("A","B","C"),
+               EM == "A",
+               RACA %in% c(2, 3, 5)) |> 
+  rename(RA2=R, CNTA2=CNT, CHTA2=CHT, LCTA2=LCT, MTA2=MT, FORMULAA2=FORMULA) |> 
+  select(c(RA2, CNTA2, CHTA2, LCTA2, MTA2, FORMULAA2)) |> 
+  summary()
+
+#Fora do Grupo A2
+base |> 
+  filter(!RENDA %in% c("A","B","C")|
+               EM != "A"|
+               !RACA %in% c(2, 3, 5)) |> 
+  rename(RFA2=R, CNTFA2=CNT, CHTFA2=CHT, LCTFA2=LCT, MTFA2=MT, FORMULAFA2=FORMULA) |> 
+  select(c(RFA2, CNTFA2, CHTFA2, LCTFA2, MTFA2, FORMULAFA2)) |> 
+  summary() 
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A6
+base |> 
+  filter(!RENDA %in% c("A","B","C"),
+               EM == "A") |> 
+  rename(RA6=R, CNTA6=CNT, CHTA6=CHT, LCTA6=LCT, MTA6=MT, FORMULAA6=FORMULA) |> 
+  select(c(RA6, CNTA6, CHTA6, LCTA6, MTA6, FORMULAA6)) |> 
+  summary()
+
+#Fora do Grupo A6
+base |> 
+  filter(RENDA %in% c("A","B","C")|
+               EM != "A") |> 
+  rename(RFA6=R, CNTFA6=CNT, CHTFA6=CHT, LCTFA6=LCT, MTFA6=MT, FORMULAFA6=FORMULA) |> 
+  select(c(RFA6, CNTFA6, CHTFA6, LCTFA6, MTFA6, FORMULAFA6)) |> 
+  summary()
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A7
+base |> 
+  filter(!RENDA %in% c("A","B","C"),
+               EM == "A",
+               RACA %in% c(2, 3, 5)) |> 
+  rename(RA7=R, CNTA7=CNT, CHTA7=CHT, LCTA7=LCT, MTA7=MT, FORMULAA7=FORMULA) |> 
+  select(c(RA7, CNTA7, CHTA7, LCTA7, MTA7, FORMULAA7)) |> 
+  summary()
+
+#Fora do Grupo A7
+base |> 
+  filter(RENDA %in% c("A","B","C")|
+               EM != "A"|
+               !RACA %in% c(2, 3, 5)) |> 
+  rename(RFA7=R, CNTFA7=CNT, CHTFA7=CHT, LCTFA7=LCT, MTFA7=MT, FORMULAFA7=FORMULA) |> 
+  select(c(RFA7, CNTFA7, CHTFA7, LCTFA7, MTFA7, FORMULAFA7)) |> 
+  summary()
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo B
+base |> 
+  filter(EM != "A") |> 
+  rename(RB=R, CNTB=CNT, CHTB=CHT, LCTB=LCT, MTB=MT, FORMULAB=FORMULA) |> 
+  select(c(RB, CNTB, CHTB, LCTB, MTB, FORMULAB)) |> 
+  summary()
+
+#Fora do Grupo B
+base |> 
+  filter(EM == "A") |> 
+  rename(RFB=R, CNTFB=CNT, CHTFB=CHT, LCTFB=LCT, MTFB=MT, FORMULAFB=FORMULA) |> 
+  select(c(RFB, CNTFB, CHTFB, LCTFB, MTFB, FORMULAFB)) |> 
+  summary()
+
+#---------------------------------------------------------------
+
+```
+
+```{r}
+## Graficos de aprovados segundo a cota
+
+#Aprovados Dentro do Grupo A1 e fora do Grupo A2
+base <- base |>  
+  mutate(A1= ifelse(RENDA %in% c("A" ,"B" ,"C") &
+               EM == "A" &
+         !RACA %in% c(2 , 3 , 5) &
+         FORMULA >= 635.91 &
+         R>=300 &
+         CNT>=300 &
+         CHT>=350 &
+         LCT>=300 &
+         MT>=250,
+         'Aprovado',
+         ifelse(!RENDA %in% c("A","B","C")|
+         EM != "A",
+         'Não concorreu',
+         'Não aprovado')))
+
+
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A2
+base <- base |>  
+  mutate(A2= ifelse(RENDA %in% c("A","B","C") &
+               EM == "A" &
+               RACA %in% c(2, 3, 5) &
+         FORMULA >= 620.97 &
+         R>=300 &
+         CNT>=300 &
+         CHT>=350 &
+         LCT>=300 &
+         MT>=250,
+         'Aprovado',
+         ifelse(!RENDA %in% c("A","B","C")|
+         EM != "A" |
+           !RACA %in% c(2, 3, 5),
+         'Não concorreu',
+         'Não aprovado')))
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A6
+base <- base |>  
+  mutate(A6= ifelse(!RENDA %in% c("A","B","C") &
+               EM == "A" &
+               !RACA %in% c(2, 3, 5) &
+         FORMULA >= 654.47 &
+         R>=300 &
+         CNT>=300 &
+         CHT>=350 &
+         LCT>=300 &
+         MT>=250,
+         'Aprovado',
+         ifelse(RENDA %in% c("A","B","C")|
+                  EM != "A",
+         'Não concorreu',
+         'Não aprovado')))
+
+
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo A7
+base <- base |>  
+  mutate(A7= ifelse(!RENDA %in% c("A","B","C") &
+               EM == "A" &
+               RACA %in% c(2, 3, 5) &
+         FORMULA >= 629.21 &
+         R>=300 &
+         CNT>=300 &
+         CHT>=350 &
+         LCT>=300 &
+         MT>=250,
+         'Aprovado',
+         ifelse(RENDA %in% c("A","B","C")|
+                  EM != "A" |
+                  !RACA %in% c(2, 3, 5),
+         'Não concorreu',
+         'Não aprovado')))
+
+#---------------------------------------------------------------
+
+#Dentro do Grupo B
+base <- base |>  
+  mutate(B= ifelse(EM != "A" &
+         FORMULA >= 661.34 &
+         R>=300 &
+         CNT>=300 &
+         CHT>=350 &
+         LCT>=300 &
+         MT>=250,
+         'Aprovado',
+         ifelse(EM == "A",
+         'Não concorreu',
+         'Não aprovado')))
+
+
+
+#---------------------------------------------------------------
+
+```
+
+```{r}
+## Gráfico de contagem segundo situação de aprovação para o Primeiro período na
+## Ação afirmativa B
+
+base |> 
+  count(B) |> 
+  ggplot(aes(x=B, y=n)) + 
+  geom_bar(stat='identity',
+           fill="red") +
+  geom_text(aes(label = n), 
+            vjust=-0.5) +
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                     decimal.mark = ",")) +
+  labs(x="Candidatos na ampla concorrência (B)", y="Frequência", 
+       title="Situação dos candidatos na ampla concorrência (B) no 1º período") + 
+  theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+```{r}
+## Gráfico de contagem segundo situação de aprovação para o Primeiro período na
+## Ação afirmativa A1
+
+base |> 
+  count(A1) |> 
+  ggplot(aes(x=A1, y=n)) + 
+  geom_bar(stat='identity',
+           fill="brown") +
+  geom_text(aes(label = n), 
+            vjust=-0.5) +
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                     decimal.mark = ",")) +
+  labs(x="Candidatos na ação afirmativa A1", y="Frequência", 
+       title="Situação dos candidatos na ação afirmativa A1 no 1º período") + 
+  theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+```{r}
+## Gráfico de contagem segundo situação de aprovação para o Primeiro período na
+## Ação afirmativa A2
+
+base |> 
+  count(A2) |> 
+  ggplot(aes(x=A2, y=n)) + 
+  geom_bar(stat='identity',
+           fill="orange") +
+  geom_text(aes(label = n), 
+            vjust=-0.5) +
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                     decimal.mark = ",")) +
+  labs(x="Candidatos na ação afirmativa A2", y="Frequência", 
+       title="Situação dos candidatos na ação afirmativa A2 no 1º período") + 
+  theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+```{r}
+## Gráfico de contagem segundo situação de aprovação para o Primeiro período na
+## Ação afirmativa A6
+
+base |> 
+  count(A6) |> 
+  ggplot(aes(x=A6, y=n)) + 
+  geom_bar(stat='identity',
+           fill="darkgray") +
+  geom_text(aes(label = n), 
+            vjust=-0.5) +
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                     decimal.mark = ",")) +
+  labs(x="Candidatos na ação afirmativa A6", y="Frequência", 
+       title="Situação dos candidatos na ação afirmativa A6 no 1º período") + 
+  theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+```{r}
+## Gráfico de contagem segundo situação de aprovação para o Primeiro período na
+## Ação afirmativa A7
+
+base |> 
+  count(A7) |> 
+  ggplot(aes(x=A7, y=n)) + 
+  geom_bar(stat='identity',
+           fill="darkblue") +
+  geom_text(aes(label = n), 
+            vjust=-0.5) +
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                     decimal.mark = ",")) +
+  labs(x="Candidatos na ação afirmativa A7", y="Frequência", 
+       title="Situação dos candidatos na ação afirmativa A7 no 1º período") + 
+  theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+```{r}
+## grafico de barras, em proporção, para raça dos candidatos baseado nos aprovados
+
+
+base |>
+  filter(A1=="Aprovado"|
+           A2=="Aprovado" |
+           A6=="Aprovado"|
+           A7=="Aprovado" | 
+           B=="Aprovado") |> 
+  count(RACA) |> 
+  mutate(prop=n/sum(n)*100,
+         rotulo=paste0(round(prop,2), "%")
+         ,RACA = ifelse(RACA==0,'Não Declarado',
+                        ifelse(RACA==1,'Branco',
+                        ifelse(RACA==2,'Preta',
+                        ifelse(RACA==3,'Parda',
+                        ifelse(RACA==4, 'Amarela',
+                        ifelse(RACA==5,'Indígena','Não dispõe da informação'))))))) |> 
+  ggplot(mapping = aes(x = reorder(RACA, -n),
+                       y = n/sum(n))) +
+  geom_bar(stat = "identity", fill = "Dark green", color = "Black") +
+  geom_text(aes(label = rotulo), 
+            vjust=-0.5) + 
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = scales::percent) +
+  labs(x = "Raça",y = "Porcentagem",
+       title="Porcentagem de candidatos segundo a raça",
+       subtitle="Dados referentes aos candidatos do saeb 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+
+```
+
+```{r}
+## grafico de barras, em proporção, para raça dos candidatos baseado na população geral
+
+
+base |> 
+  count(RACA) |> 
+  mutate(prop=n/sum(n)*100,
+         rotulo=paste0(round(prop,2), "%")
+         ,RACA = ifelse(RACA==0,'Não Declarado',
+                        ifelse(RACA==1,'Branco',
+                        ifelse(RACA==2,'Preta',
+                        ifelse(RACA==3,'Parda',
+                        ifelse(RACA==4, 'Amarela',
+                        ifelse(RACA==5,'Indígena','Não dispõe da informação'))))))) |> 
+  ggplot(mapping = aes(x = reorder(RACA, -n),
+                       y = n/sum(n))) +
+  geom_bar(stat = "identity", fill = "Dark green", color = "Black") +
+  geom_text(aes(label = rotulo), 
+            vjust=-0.5) + 
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = scales::percent) +
+  labs(x = "Raça",y = "Porcentagem",
+       title="Porcentagem de candidatos segundo a raça",
+       subtitle="Dados referentes aos candidatos do saeb 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+
+```
+
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#grafico de barras para situação de Situação_B.1alho remunerado e tipo de escola que frequentou o ensino médio(população geral)
+
+
+base |> 
+  mutate(Aprovado= ifelse(B=="Aprovado"| A1=="Aprovado"| A2=="Aprovado"| 
+                          A6=="Aprovado"| A7=="Aprovado", "Aprovado", "Não Aprovado")) |> 
+  group_by(EM, Aprovado) |> 
+  summarize(n = n()) |> 
+  mutate(pct = n/sum(n), 
+         rotulo = paste0(round(pct*100,0), "%"),
+         EM= ifelse(EM=='A','Somente em escola pública',
+                        ifelse(EM=='B','Parte em escola pública e \nparte em escola privada sem bolsa de estudo integral',
+                        ifelse(EM=='C','Parte em escola pública e \nparte em escola privada com bolsa de estudo integral',
+                        ifelse(EM=='D','Somente em escola privada \nsem bolsa de estudo integrall',
+                               'Somente em escola privada \ncom bolsa de estudo integral'))))) |> 
+  arrange(Aprovado) |> 
+  ggplot(mapping = aes(x = EM,
+                       y = pct,
+                       fill = factor(Aprovado))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = scales::percent) +
+  geom_text(aes(label = rotulo), 
+            size = 6, 
+            position = position_stack(vjust = 0.5))  +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Tipo de escola que frequentou o ensino médio",
+       y = "Proporção",
+       fill = "Situação de aprovação em pedagogia na UFF em 2017",
+       title="Perfil dos candidatos em relação ao tipo de escola que frequentou o ensino médio e situação de aprovação em pedagogia na UFF em 2017",
+       subtitle="Dados referentes aos candidatos do saeb 2016 (população geral)") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+
+```

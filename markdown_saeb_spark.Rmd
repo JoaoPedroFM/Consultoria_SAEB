@@ -18,22 +18,19 @@ sc <- spark_connect(master = "local", config = conf)
 
 
 ## Importando dados // Lendo base já tratada 
-dados <- spark_read_csv(sc=sc,path='TS_ALUNO_5EF.csv',delimiter = ";")
-base <- spark_read_parquet(sc=sc,path='dados_parquet')
-
-
-base_saeb <- collect(base)
+dados <- spark_read_csv(sc=sc,path='TS_ALUNO_5EF.csv',delimiter = ",")
+#base <- spark_read_parquet(sc=sc,path='dados_parquet')
+#base_saeb <- collect(base)
 ```
 
 ```{r}
 # 
-# ## Realizando tratamentos necessários para realização dos objetivos
-# dados2 <- filter(dados,NU_ANO==2016,
-#                          TP_ST_CONCLUSAO %in% c(1,2),
-#                          SG_UF_RESIDENCIA %in% c('RJ','SP','MG','ES'),
-#                          IN_TREINEIRO==0,
-#                          TP_PRESENCA_LC==1,
-#                          TP_PRESENCA_CH==1)
+## Realizando tratamentos necessários para realização dos objetivos
+dados2 <- dados |> 
+  filter(ID_SAEB==2019) |> 
+  select(ID_UF, TX_RESP_Q002)
+
+base_saeb <- collect(dados2)
 # 
 # 
 # dados3 <- select(dados2, TP_COR_RACA, TP_SEXO, TP_ESCOLA, Q005, Q026, Q002, Q006, NU_IDADE,

@@ -9,9 +9,17 @@ code_folding: show
 ---
 
 ```{r setup, include=FALSE}
-library(readxl)
+{library(flexdashboard)
+library(readr)
+library(stringr)
 library(dplyr)
-
+library(ggplot2)
+library(gridExtra)
+library(scales)
+library(treemapify)
+library(ggalt)
+library(ggrepel)
+}
 
 base_saeb = read_excel("Base SAEB.xlsx")
 
@@ -49,7 +57,659 @@ base_saeb$serie <- factor(base_saeb$serie,levels=c(1,2,3),
                               labels=c("5º ano EF","9º ano EF","3ª série EM"))
 
 base_saeb = base_saeb |> 
-  filter(serie== "5º ano EF")
+  filter(serie== "5º ano EF") |> 
+  rename(depADM=depADM5EF, esc_mae= esc_mae5EF, esc_pai= esc_pai5EF, raca=raca5EF, turno=turno5EF, local=local5EF)
+
+```
+
+## Objetivo
+Analisar o perfil dos candidatos do ENEM 2016 da região Sudeste e aqueles nessas condições que obteriam aprovação para curso de Pedagogia na UFF no primeiro período de 2017.
+
+## O Conjunto de Dados
+
+O conjunto originalmente tem quase 9 milhões de observações e mais de 100 variáveis.
+
+Após os tratamentos, a base ficou com 1.627.945 observações e 14 variáveis.
 
 
+## Análises descritivas
+
+### Escolaridade da Mãe dos Candidatos  {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#Gráfico treemap para escolaridade da mãe dos candidatos para os aprovados em pedagogia
+cont_esc_mae <- base_saeb |>
+  count(esc_mae)
+
+cont_esc_mae$prop <- cont_esc_mae$n/sum(cont_esc_mae$n) * 100
+
+cont_esc_mae$rotulo <- paste0(round(cont_esc_mae$prop,2), "%")
+
+cont_esc_mae |> 
+  ggplot(aes(fill = esc_mae, 
+           area = n, label = esc_mae)) +
+  geom_treemap() + 
+  geom_treemap_text(colour = "black", 
+                    place = "centre") +
+  scale_fill_brewer(palette = "Set3" ) +
+  labs(title="Perfil dos estudantes segundo escolaridade da mãe",
+       subtitle="Dados da SAEB de 2017 referentes aos estudantes do 5º ano do EF") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
+
+```
+
+
+### Raça dos candidatos {.tabset}
+
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+######################################################################################
+##grafico de barras para raça dos candidatos
+# Calculando o numero de pessoas em cada categoria de Raça
+cont_raca <- base_saeb |>
+  count(raca)
+
+cont_raca$prop <- cont_raca$n/sum(cont_raca$n) * 100
+
+cont_raca$rotulo <- paste0(round(cont_raca$prop,2), "%")
+
+# Atividade
+cont_raca |> 
+  ggplot(mapping = aes(x = reorder(raca, -n),
+                       y = n/sum(n))) +
+  geom_bar(stat = "identity", fill = "Dark green", color = "Black") +
+  geom_text(aes(label = rotulo), 
+            vjust=-0.5) + 
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = scales::percent) +
+  labs(x = "Raça",y = "Porcentagem",
+       title="Perfil dos estudantes segundo raça",
+       subtitle="Dados da SAEB de 2017 referentes aos estudantes do 5º ano do EF") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
+
+```
+
+#### População Geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+######################################################################################
+##grafico de barras para raça dos candidatos
+# Calculando o numero de pessoas em cada categoria de Raça
+cont_raca <- base_saeb |>
+  count(raca)
+
+cont_raca$prop <- cont_raca$n/sum(cont_raca$n) * 100
+
+cont_raca$rotulo <- paste0(round(cont_raca$prop,2), "%")
+
+# Atividade
+gr2 = cont_raca |> 
+  mutate(raca = ordered(raca,levels=c(0,1,2,3,4,5,6),labels=c("Não Declarado","Branco","Preta","Parda","Amarela","Indígena","Não dispõe da informação"))) |> 
+  ggplot(mapping = aes(x = reorder(raca, -n),
+                       y = n/sum(n))) +
+  geom_bar(stat = "identity", fill = "Dark green", color = "Black") +
+  geom_text(aes(label = rotulo), 
+            vjust=-0.5) + 
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = scales::percent) +
+  labs(x = "Raça",y = "Porcentagem",
+       title="Porcentagem de candidatos segundo a raça",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
+
+gr2
+
+```
+
+
+### Sexo dos Candidatos
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# #sexo geral
+# base$SEXO<- ordered(base$SEXO,levels=c("M","F"),labels=c("Masculino","Feminino"))
+# 
+# sexo <- base_saeb |>
+#   group_by(SEXO) |> 
+#   summarise(n = n()) |>
+#   mutate(prop = round(n*100/sum(n), 1),
+#          rot.ypos = cumsum(prop) - 0.5*prop, 
+#          rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
+# 
+# # Criando um gráfico de setores com rótulos
+# g20 <- ggplot(sexo, 
+#              aes(x = "", 
+#                  y = prop, 
+#                  fill = order(SEXO))) +
+#   geom_bar(width = 1, 
+#            stat = "identity", 
+#            color = "black",
+#            fill = c("tomato", "#21908CFF")) +
+#   geom_text(aes(y = rot.ypos, label = rotulo), 
+#             color = "black") +
+#   coord_polar("y", 
+#               start = 0, 
+#               direction = -1) +
+#   theme_void() +
+#   theme(legend.position = "FALSE") +
+#   labs(title = "Sexo dos candidatos da região Sudeste do Enem 2016")
+# g20
+
+#base dos aprovados
+sexo.1 <- base_saeb |> 
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |>  
+  group_by(SEXO) |>  
+  summarise(n = n()) |>  
+  mutate(SEXO = ordered(SEXO,levels=c("M","F"),labels=c("Masculino","Feminino")),
+         prop = round(n*100/sum(n), 1),
+         rot.ypos = cumsum(prop) - 0.5*prop, 
+         rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
+
+# Criando um gráfico de setores com rótulos
+g21 <- ggplot(sexo.1, 
+             aes(x = "", 
+                 y = prop, 
+                 fill = order(SEXO))) +
+  geom_bar(width = 1, 
+           stat = "identity", 
+           color = "black",
+           fill = c("tomato", "#21908CFF")) +
+  geom_text(aes(y = rot.ypos, label = rotulo), 
+            color = "black") +
+  coord_polar("y", 
+              start = 0, 
+              direction = -1) +
+  theme(legend.position = "FALSE") +
+  labs(title="Perfil dos candidatos segundo o sexo",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017")+ theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+#sexo não aprovados e não concorridos
+sexo.2 <- base_saeb |> 
+  group_by(SEXO) |>  
+  summarise(n = n()) |>  
+  mutate(SEXO = ordered(SEXO,levels=c("M","F"),labels=c("Masculino","Feminino")),
+         prop = round(n*100/sum(n), 1),
+         rot.ypos = cumsum(prop) - 0.5*prop, 
+         rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
+
+# Criando um gráfico de setores com rótulos
+g22 <- ggplot(sexo.2, 
+             aes(x = "", 
+                 y = prop, 
+                 fill = order(SEXO))) +
+  geom_bar(width = 1, 
+           stat = "identity", 
+           color = "black",
+           fill = c("tomato", "#21908CFF")) +
+  geom_text(aes(y = rot.ypos, label = rotulo), 
+            color = "black") +
+  coord_polar("y", 
+              start = 0, 
+              direction = -1) +
+  theme(legend.position = "FALSE") +
+  labs(title="Perfil dos candidatos segundo o sexo",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)")+ theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+grid.arrange(g21, g22, ncol=2)
+
+```
+
+### Tipo de Ensino Médio Frequentado pelos Candidatos
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#grafico de barras para situação de Situação_B.1alho remunerado e tipo de escola que frequentou o ensino médio(população geral)
+
+# criando um resumo do objeto base
+perct_EM_Aprovado <- base_saeb |>
+  mutate(Aprovado= ifelse(Situação_B.1=="Aprovado"| Situação_A1.1=="Aprovado"| Situação_A2.1=="Aprovado"| 
+                          Situação_A6.1=="Aprovado"| Situação_A7.1=="Aprovado", "Aprovado", "Não Aprovado")) |> 
+  group_by(EM, Aprovado) |> 
+  summarize(n = n()) |> 
+  mutate(pct = n/sum(n),
+         rotulo = scales::percent(pct))
+
+# adicionando os percentuais no gráfico
+perct_EM_Aprovado |>
+  mutate(EM= ordered(EM,levels=c("A","B","C","D","E"),
+                     labels=c("Somente em escola pública","Parte em escola pública e \nparte em escola privada sem bolsa de estudo integral","Parte em escola pública e \nparte em escola privada com bolsa de estudo integral","Somente em escola privada \nsem bolsa de estudo integral","Somente em escola privada \ncom bolsa de estudo integral"))) |> 
+  arrange(Aprovado) |> 
+  ggplot(mapping = aes(x = EM,
+                       y = pct,
+                       fill = factor(Aprovado))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = percent) +
+  geom_text(aes(label = rotulo), 
+            size = 6, 
+            position = position_stack(vjust = 0.5))  +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Tipo de escola que frequentou o ensino médio",
+       y = "Proporção",
+       fill = "Situação de aprovação em pedagogia na UFF em 2017",
+       title="Perfil dos candidatos em relação ao tipo de escola que frequentou o ensino médio e situação de aprovação em pedagogia na UFF em 2017",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+
+```
+
+### Situação de Trabalho dos Candidatos  {.tabset}
+#### Aprovados
+
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+######################################################################################
+##grafico de barras para situação de trabalho remunerado dos candidatos
+# Calculando o numero de pessoas em cada categoria de situação de trabalho remunerado
+cont_TRAB <- base_saeb |>
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |> 
+  count(TRAB)
+
+# Atividade
+gt1 = cont_TRAB |> 
+  mutate(TRAB = ordered(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  ggplot(mapping = aes(y = reorder(TRAB, n),
+                       x = n)) +
+  geom_bar(stat = "identity", fill = "lightblue", color = "Black") +
+  geom_text(aes(label = n), size=5,
+            hjust=2) + 
+  scale_x_continuous(breaks = NULL) +
+  labs(y = "Situação de trabalho remunerado",x = "Frequência",
+       title="Frequência de candidatos segundo a situação de trabalho remunerado",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
+
+gt1
+```
+
+#### População Geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+######################################################################################
+##grafico de barras para situação de trabalho remunerado dos candidatos
+# Calculando o numero de pessoas em cada categoria de situação de trabalho remunerado
+cont_TRAB <- base_saeb |>
+  count(TRAB)
+
+# Atividade
+gt2 = cont_TRAB |> 
+  mutate(TRAB = ordered(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  ggplot(mapping = aes(y = reorder(TRAB, n),
+                       x = n)) +
+  geom_bar(stat = "identity", fill = "lightblue", color = "Black") +
+  geom_text(aes(label = n), size=5,
+            hjust=2) + 
+  scale_x_continuous(breaks = NULL) +
+  labs(y = "Situação de trabalho remunerado",x = "Frequência",
+       title="Frequência de candidatos segundo a situação de trabalho remunerado",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
+
+gt2
+```
+
+### Número de Pessoas Residentes na Casa dos Candidatos {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# gráfico de médias com os erros padrões aprovados
+g1 <- base_saeb |>
+  mutate(esc_mae= ordered(esc_mae,levels=c("A","B","C","D","E","F","G","H"),
+                        labels=c("Sem estudo","Até 5º ano do EF\n incompleto","Até 9º ano do EF\n incompleto","Até EM incompleto","Completou o EM, mas\n não completou a Faculdade","Completou a Faculdade, mas\n não completou a Pós-graduação","Completou a Pós-graduação","Não sei"))) |> 
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |>
+  group_by(esc_mae) |> 
+  summarize(n = n(),
+         media = mean(MORA),
+         desvio = sd(MORA),
+         erro.padrao = desvio / sqrt(n)) |> 
+  ggplot(mapping = aes(x = esc_mae,
+                       y = media)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) +
+  labs(x='Escolaridade da mãe',
+       y='Média de pessoas na casa',
+       title='Média de pessoas na casa segundo a escolaridade da mãe',
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") +   theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+
+g1
+```
+
+#### População Geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# gráfico de médias com os erros padrões pop geral
+g2 <- base_saeb |>
+    mutate(esc_mae= ordered(esc_mae,levels=c("A","B","C","D","E","F","G","H"),
+                        labels=c("Sem estudo","Até 5º ano do EF\n incompleto","Até 9º ano do EF\n incompleto","Até EM incompleto","Completou o EM, mas\n não completou a Faculdade","Completou a Faculdade, mas\n não completou a Pós-graduação","Completou a Pós-graduação","Não sei"))) |> 
+  group_by(esc_mae) |> 
+  summarize(n = n(),
+         media = mean(MORA),
+         desvio = sd(MORA),
+         erro.padrao = desvio / sqrt(n)) |> 
+  ggplot(mapping = aes(x = esc_mae,
+                       y = media)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) +
+  labs(x='Escolaridade da mãe',
+       y='Média de pessoas na casa',
+       title='Média de pessoas na casa segundo a escolaridade da mãe',
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)")+ theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+
+g2
+```
+
+### Idade dos Candidatos  {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#Histograma da idade dos candidatos para os aprovados em pedagogia
+h1 = base_saeb |>
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |> 
+  ggplot(mapping = aes(x = IDADE)) +
+  geom_histogram(fill= "orange", col="white")+
+  scale_x_continuous(breaks = seq(15,90,5))+
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                  decimal.mark = ",")) +
+  labs(y= "Frequência", x="Idade",
+       title="Perfil dos candidatos segundo a idade",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") +   theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+h1
+```
+
+#### População Geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#Histograma da idade dos candidatos (população geral)
+h2 = base_saeb |>
+  ggplot(mapping = aes(x = IDADE)) +
+  geom_histogram(fill= "darkred", col="white")+
+  scale_x_continuous(breaks = seq(15,90,5))+
+  scale_y_continuous(label = scales::label_number(big.mark = ".",
+                                                  decimal.mark = ",")) +
+  labs(y= "Frequência", x="Idade",
+       title="Perfil dos candidatos segundo a idade",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+h2
+```
+
+### UF dos Aprovados dos 2 períodos
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+uf.1.a <- base_saeb |> filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |> 
+  group_by(UF) |> 
+  summarise(n=n())
+
+uf.2.a <- base_saeb |>filter(Situação_A1.2=="Aprovado"|
+           Situação_A2.2=="Aprovado" |
+           Situação_A6.2=="Aprovado"|
+           Situação_A7.2=="Aprovado" | 
+           Situação_B.2=="Aprovado") |> 
+  group_by(UF) |> 
+  summarise(n2=n())
+
+uf <- left_join(uf.1.a,uf.2.a)
+
+uf |> 
+ggplot(mapping = aes(y = reorder(UF, n),
+                     x = n,
+                     xend = n2)) +  
+  geom_dumbbell(size = 1.2,
+                size_x = 3, 
+                size_xend = 3,
+                colour = "grey", 
+                colour_x = "blue", 
+                colour_xend = "red") +
+  scale_x_continuous(breaks = seq(5000,65000,10000))+
+  labs(title = "Perfil dos candidatos do ENEM 2016 aprovados em pedagogia\n na UFF em 2017 por período",
+       subtitle = "1º período e 2º período",
+       x = "Candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017",
+       y = "UF")+
+  theme_minimal() + 
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+   geom_text_repel(aes(label = n),
+                  size = 3)
+
+```
+
+
+## Análises Cruzadas 
+
+### Tipo de Ensino Médio X Raça {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#grafico de barras para situação de Situação_B.1alho remunerado e tipo de escola que frequentou o ensino médio(população geral)
+
+# criando um resumo do objeto base
+perct_EM_raca <- base_saeb |>
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |>
+  group_by(EM, raca) |> 
+  summarize(n = n()) |> 
+  mutate(pct = n/sum(n),
+         rotulo = scales::percent(pct))
+
+# adicionando os percentuais no gráfico
+perct_EM_raca |>
+  mutate(EM= ordered(EM,levels=c("A","B","C","D","E"),
+                     labels=c("Somente em escola pública","Parte em escola pública e \nparte em escola privada sem bolsa de estudo integral","Parte em escola pública e \nparte em escola privada com bolsa de estudo integral","Somente em escola privada \nsem bolsa de estudo integral","Somente em escola privada \ncom bolsa de estudo integral")),
+         raca = ordered(raca,levels=c(0,1,5,3,4,2,6),labels=c("Não Declarado","Branco","Indígena","Parda","Amarela","Preta","Não dispõe da informação"))) |> 
+  arrange(raca) |> 
+  ggplot(mapping = aes(x = EM,
+                       y = pct,
+                       fill = factor(raca))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = percent) +
+  geom_text(aes(label = rotulo), 
+            size = 3, 
+            position = position_stack(vjust = 0.5))  +
+  scale_fill_brewer(palette = "Set2") +
+  labs(x = "Tipo de escola que frequentou o ensino médio",
+       y = "Proporção",
+       fill = "Raça",
+       title="Perfil dos candidatos em relação ao tipo de escola que frequentou o ensino médio e raça",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+```
+
+#### População geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+#grafico de barras para situação de Situação_B.1alho remunerado e tipo de escola que frequentou o ensino médio(população geral)
+
+# criando um resumo do objeto base
+perct_EM_raca <- base_saeb |>
+  group_by(EM, raca) |> 
+  summarize(n = n()) |> 
+  mutate(pct = n/sum(n),
+         rotulo = scales::percent(pct))
+
+# adicionando os percentuais no gráfico
+perct_EM_raca |>
+  mutate(EM= ordered(EM,levels=c("A","B","C","D","E"),
+                     labels=c("Somente em escola pública","Parte em escola pública e \nparte em escola privada sem bolsa de estudo integral","Parte em escola pública e \nparte em escola privada com bolsa de estudo integral","Somente em escola privada \nsem bolsa de estudo integral","Somente em escola privada \ncom bolsa de estudo integral")),
+         raca = ordered(raca,levels=c(0,1,5,3,4,2,6),labels=c("Não Declarado","Branco","Indígena","Parda","Amarela","Preta","Não dispõe da informação"))) |> 
+  arrange(raca) |> 
+  ggplot(mapping = aes(x = EM,
+                       y = pct,
+                       fill = factor(raca))) +
+  geom_bar(stat = "identity",
+           position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, .2), 
+                     label = percent) +
+  geom_text(aes(label = rotulo), 
+            size = 3, 
+            position = position_stack(vjust = 0.5))  +
+  scale_fill_brewer(palette = "Set2") +
+  labs(x = "Tipo de escola que frequentou o ensino médio",
+       y = "Proporção",
+       fill = "Raça",
+       title="Perfil dos candidatos em relação ao tipo de escola que frequentou o ensino médio e raça",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+```
+
+
+### Situação de Trabalho Remunerado x Número de Pessoas na Casa x Escolaridade da Mãe {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+
+# calculando a media e as barras por TRAB e esc_mae
+media_erros <- base_saeb |>
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |> 
+  group_by(esc_mae,TRAB) |> 
+  summarize(n = n(),
+         media = mean(MORA),
+         desvio = sd(MORA),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  mutate(esc_mae= ordered(esc_mae,levels=c("A","B","C","D","E","F","G","H"),
+                        labels=c("Sem estudo","Até 5º ano do EF\n incompleto","Até 9º ano do EF\n incompleto","Até EM incompleto","Completou o EM,\n mas não completou a Faculdade","Completou a Faculdade,\n mas não completou a Pós-graduação","Completou a Pós-graduação","Não sei")),
+        TRAB = factor(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  ggplot(mapping = aes(x = esc_mae,
+                       y = media,
+                       group = TRAB,
+                       color = TRAB)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) + 
+  #ylim(c(3.5,4.5)) +
+  labs(x = "Escolaridade da mãe",
+       y = "Média do número de pessoas residentes na casa",
+       color = "Situação de trabalho remunerado",
+       title="Perfil dos candidatos em relação à escolaridade da mãe, situação de trabalho remunerado e \nmédia do número de pessoas residentes na casa",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+```
+
+#### População geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+
+# calculando a media e as barras por TRAB e esc_mae
+media_erros <- base_saeb |>
+  group_by(esc_mae,TRAB) |> 
+  summarize(n = n(),
+         media = mean(MORA),
+         desvio = sd(MORA),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  mutate(esc_mae= ordered(esc_mae,levels=c("A","B","C","D","E","F","G","H"),
+                        labels=c("Sem estudo","Até 5º ano do EF\n incompleto","Até 9º ano do EF\n incompleto","Até EM incompleto","Completou o EM,\n mas não completou a Faculdade","Completou a Faculdade,\n mas não completou a Pós-graduação","Completou a Pós-graduação","Não sei")),
+        TRAB = factor(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  ggplot(mapping = aes(x = esc_mae,
+                       y = media,
+                       group = TRAB,
+                       color = TRAB)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) + 
+  #ylim(c(3.5,4.5)) +
+  labs(x = "Escolaridade da mãe",
+       y = "Média do número de pessoas residentes na casa",
+       color = "Situação de trabalho remunerado",
+       title="Perfil dos candidatos em relação à escolaridade da mãe, situação de trabalho remunerado e \nmédia do número de pessoas residentes na casa",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+```
+
+
+### Situação de Trabalho Remunerado x Idade {.tabset}
+#### Aprovados
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# Boxplot por TRAB
+# criando um resumo do objeto survey
+media_grafico <- base_saeb |>
+  filter(Situação_A1.1=="Aprovado"|
+           Situação_A2.1=="Aprovado" |
+           Situação_A6.1=="Aprovado"|
+           Situação_A7.1=="Aprovado" | 
+           Situação_B.1=="Aprovado") |> 
+   mutate(TRAB = ordered(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  group_by(TRAB) |> 
+  summarize(media = mean(IDADE, na.rm = TRUE))
+
+# criando o gráfico de barras para as médias
+media_grafico |>
+  ggplot(mapping = aes(x = TRAB,
+                       y = media)) +
+  geom_bar(stat = "identity", fill="darkblue") +
+  labs(x = "Situação de Trabalho Remunerado",
+       y = "Média da idade",
+       title="Perfil dos candidatos em relação à situação de trabalho remunerado e idade",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+```
+
+#### População geral
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# Boxplot por TRAB
+# criando um resumo do objeto survey
+media_grafico <- base_saeb |>
+   mutate(TRAB = ordered(TRAB,levels=c("A","B","C"), labels=c("Não, nunca trabalhei.","Sim, já trabalhei, \nmas não estou trabalhando.","Sim, estou trabalhando."))) |> 
+  group_by(TRAB) |> 
+  summarize(media = mean(IDADE, na.rm = TRUE))
+
+# criando o gráfico de barras para as médias
+media_grafico |>
+  ggplot(mapping = aes(x = TRAB,
+                       y = media)) +
+  geom_bar(stat = "identity", fill="darkblue") +
+  labs(x = "Situação de Trabalho Remunerado",
+       y = "Média da idade",
+       title="Perfil dos candidatos em relação à situação de trabalho remunerado e idade",
+       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))
 ```

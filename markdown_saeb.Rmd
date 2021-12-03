@@ -10,6 +10,8 @@ code_folding: show
 
 ```{r setup, include=FALSE}
 library(readxl)
+library(dplyr)
+
 
 base_saeb = read_excel("Base SAEB.xlsx")
 
@@ -45,4 +47,9 @@ base_saeb$sexo <- factor(base_saeb$sexo,levels=c(0,1),
 # série
 base_saeb$serie <- factor(base_saeb$serie,levels=c(1,2,3),
                               labels=c("5º ano EF","9º ano EF","3ª série EM"))
+
+base_saeb = base_saeb |> 
+  filter(serie== "5º ano EF")
+
+
 ```

@@ -1,5 +1,5 @@
 ---
-title: "Análise dos Candidatos de SAEB 2017"
+title: "Desempenho dos estudantes no SAEB de 2017"
 subtitle: "Mário Fernandes"
 author: "PIXRJ - Consultoria"
 date: "Dezembro/2021"
@@ -14,7 +14,35 @@ library(readxl)
 base_saeb = read_excel("Base SAEB.xlsx")
 
 # dependencia administrativa
-# base_saeb$depADM5EF <- factor(base_saeb$depADM5EF,levels=c(0,1,2),
-                       # labels=c("Municipal","Estadual","Federal"))
+base_saeb$depADM5EF <- factor(base_saeb$depADM5EF,levels=c(0,1,2),
+                              labels=c("Municipal","Estadual","Federal"))
 
+# escolaridade da mãe
+base_saeb$esc_mae5EF <- factor(base_saeb$esc_mae5EF,levels=c(0,1,2,3),
+                              labels=c("Até EF incompleto","EF completo","EM completo",
+                                       "Ensino superior completo ou mais"))
+# escolaridade do pai
+base_saeb$esc_pai5EF <- factor(base_saeb$esc_pai5EF,levels=c(0,1,2,3),
+                              labels=c("Até EF incompleto","EF completo","EM completo",
+                                       "Ensino superior completo ou mais"))
+
+# raça
+base_saeb$raca5EF <- factor(base_saeb$raca5EF,levels=c(0,1),
+                              labels=c("Branco","Não branco"))
+
+# turno
+base_saeb$turno5EF <- factor(base_saeb$turno5EF,levels=c(0,1,2),
+                              labels=c("Manhã","Tarde","Noite"))
+
+# local
+base_saeb$local5EF <- factor(base_saeb$local5EF,levels=c(0,1,2,3),
+                              labels=c("RJ","CE","ES","SP"))
+
+# sexo
+base_saeb$sexo <- factor(base_saeb$sexo,levels=c(0,1),
+                              labels=c("Feminino","Masculino"))
+
+# série
+base_saeb$serie <- factor(base_saeb$serie,levels=c(1,2,3),
+                              labels=c("5º ano EF","9º ano EF","3ª série EM"))
 ```

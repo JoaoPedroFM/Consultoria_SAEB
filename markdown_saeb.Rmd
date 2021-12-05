@@ -19,6 +19,7 @@ library(scales)
 library(treemapify)
 library(ggalt)
 library(ggrepel)
+library(readxl)
 }
 
 base_saeb = read_excel("Base SAEB.xlsx")
@@ -75,7 +76,7 @@ Após os tratamentos, a base ficou com 1.627.945 observações e 14 variáveis.
 ## Análises descritivas
 
 ### Escolaridade da Mãe dos Candidatos  {.tabset}
-#### Aprovados
+
 ```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
 #Gráfico treemap para escolaridade da mãe dos candidatos para os aprovados em pedagogia
 cont_esc_mae <- base_saeb |>
@@ -100,7 +101,6 @@ cont_esc_mae |>
 
 ### Raça dos candidatos {.tabset}
 
-#### Aprovados
 ```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
 ######################################################################################
 ##grafico de barras para raça dos candidatos
@@ -127,87 +127,22 @@ cont_raca |>
 
 ```
 
-#### População Geral
+### Sexo dos Candidatos {.tabset}
+
 ```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
-######################################################################################
-##grafico de barras para raça dos candidatos
-# Calculando o numero de pessoas em cada categoria de Raça
-cont_raca <- base_saeb |>
-  count(raca)
 
-cont_raca$prop <- cont_raca$n/sum(cont_raca$n) * 100
-
-cont_raca$rotulo <- paste0(round(cont_raca$prop,2), "%")
-
-# Atividade
-gr2 = cont_raca |> 
-  mutate(raca = ordered(raca,levels=c(0,1,2,3,4,5,6),labels=c("Não Declarado","Branco","Preta","Parda","Amarela","Indígena","Não dispõe da informação"))) |> 
-  ggplot(mapping = aes(x = reorder(raca, -n),
-                       y = n/sum(n))) +
-  geom_bar(stat = "identity", fill = "Dark green", color = "Black") +
-  geom_text(aes(label = rotulo), 
-            vjust=-0.5) + 
-  scale_y_continuous(breaks = seq(0, 1, .2), 
-                     label = scales::percent) +
-  labs(x = "Raça",y = "Porcentagem",
-       title="Porcentagem de candidatos segundo a raça",
-       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)") + theme_classic() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12)) 
-
-gr2
-
-```
-
-
-### Sexo dos Candidatos
-```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
-# #sexo geral
-# base$SEXO<- ordered(base$SEXO,levels=c("M","F"),labels=c("Masculino","Feminino"))
-# 
-# sexo <- base_saeb |>
-#   group_by(SEXO) |> 
-#   summarise(n = n()) |>
-#   mutate(prop = round(n*100/sum(n), 1),
-#          rot.ypos = cumsum(prop) - 0.5*prop, 
-#          rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
-# 
-# # Criando um gráfico de setores com rótulos
-# g20 <- ggplot(sexo, 
-#              aes(x = "", 
-#                  y = prop, 
-#                  fill = order(SEXO))) +
-#   geom_bar(width = 1, 
-#            stat = "identity", 
-#            color = "black",
-#            fill = c("tomato", "#21908CFF")) +
-#   geom_text(aes(y = rot.ypos, label = rotulo), 
-#             color = "black") +
-#   coord_polar("y", 
-#               start = 0, 
-#               direction = -1) +
-#   theme_void() +
-#   theme(legend.position = "FALSE") +
-#   labs(title = "Sexo dos candidatos da região Sudeste do Enem 2016")
-# g20
-
-#base dos aprovados
 sexo.1 <- base_saeb |> 
-  filter(Situação_A1.1=="Aprovado"|
-           Situação_A2.1=="Aprovado" |
-           Situação_A6.1=="Aprovado"|
-           Situação_A7.1=="Aprovado" | 
-           Situação_B.1=="Aprovado") |>  
-  group_by(SEXO) |>  
+  group_by(sexo) |>  
   summarise(n = n()) |>  
-  mutate(SEXO = ordered(SEXO,levels=c("M","F"),labels=c("Masculino","Feminino")),
-         prop = round(n*100/sum(n), 1),
+  mutate(prop = round(n*100/sum(n), 1),
          rot.ypos = cumsum(prop) - 0.5*prop, 
-         rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
+         rotulo = paste0(sexo, "\n", round(prop,2), "%"))
 
 # Criando um gráfico de setores com rótulos
-g21 <- ggplot(sexo.1, 
-             aes(x = "", 
-                 y = prop, 
-                 fill = order(SEXO))) +
+ggplot(sexo.1, 
+       aes(x = "", 
+           y = prop, 
+           fill = order(sexo))) +
   geom_bar(width = 1, 
            stat = "identity", 
            color = "black",
@@ -218,37 +153,8 @@ g21 <- ggplot(sexo.1,
               start = 0, 
               direction = -1) +
   theme(legend.position = "FALSE") +
-  labs(title="Perfil dos candidatos segundo o sexo",
-       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017")+ theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
-
-#sexo não aprovados e não concorridos
-sexo.2 <- base_saeb |> 
-  group_by(SEXO) |>  
-  summarise(n = n()) |>  
-  mutate(SEXO = ordered(SEXO,levels=c("M","F"),labels=c("Masculino","Feminino")),
-         prop = round(n*100/sum(n), 1),
-         rot.ypos = cumsum(prop) - 0.5*prop, 
-         rotulo = paste0(SEXO, "\n", round(prop,2), "%"))
-
-# Criando um gráfico de setores com rótulos
-g22 <- ggplot(sexo.2, 
-             aes(x = "", 
-                 y = prop, 
-                 fill = order(SEXO))) +
-  geom_bar(width = 1, 
-           stat = "identity", 
-           color = "black",
-           fill = c("tomato", "#21908CFF")) +
-  geom_text(aes(y = rot.ypos, label = rotulo), 
-            color = "black") +
-  coord_polar("y", 
-              start = 0, 
-              direction = -1) +
-  theme(legend.position = "FALSE") +
-  labs(title="Perfil dos candidatos segundo o sexo",
-       subtitle="Dados referentes aos candidatos do ENEM 2016 (população geral)")+ theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
-
-grid.arrange(g21, g22, ncol=2)
+  labs(title="Perfil dos estudantes segundo sexo",
+       subtitle="Dados da SAEB de 2017 referentes aos estudantes do 5º ano do EF")+ theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 ```
 

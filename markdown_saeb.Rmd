@@ -61,36 +61,167 @@ library(readxl)
 #   filter(serie== "5º ano EF") |> 
 #   rename(depADM=depADM5EF, esc_mae= esc_mae5EF, esc_pai= esc_pai5EF, raca=raca5EF, turno=turno5EF, local=local5EF)
 # 
-# save(base_saeb, file = "base_saeb.rdata")
 
-load("base_saeb.rdata")
+base_saeb = read_csv2("base_saeb.csv")
 ```
 
-## Objetivo
-Analisar o perfil dos candidatos do ENEM 2016 da região Sudeste e aqueles nessas condições que obteriam aprovação para curso de Pedagogia na UFF no primeiro período de 2017.
-
-## O Conjunto de Dados
-
-O conjunto originalmente tem quase 9 milhões de observações e mais de 100 variáveis.
-
-Após os tratamentos, a base ficou com 1.627.945 observações e 14 variáveis.
-
-
-## Análises descritivas
-
-### Idade dos Candidatos  {.tabset}
-#### Aprovados
+### Raça x Proficiência em Português x Escolaridade do pai {.tabset}
 ```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
-#Histograma da idade dos candidatos para os aprovados em pedagogia
-base_saeb |> 
-  ggplot(mapping = aes(x = prof_port)) +
-  geom_histogram(fill= "orange", col="white")+
-  scale_x_continuous(breaks = seq(15,90,5))+
-  scale_y_continuous(label = scales::label_number(big.mark = ".",
-                                                  decimal.mark = ",")) +
-  labs(y= "Frequência", x="Idade",
-       title="Perfil dos candidatos segundo a idade",
-       subtitle="Dados referentes aos candidatos do ENEM 2016 aprovados em pedagogia na UFF em 2017") +   theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+
+# calculando a media e as barras por raca e esc_pai
+media_erros <- base_saeb |> 
+  group_by(esc_pai,raca) |> 
+  summarize(n = n(),
+         media = mean(prof_port),
+         desvio = sd(prof_port),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  ggplot(mapping = aes(x = esc_pai,
+                       y = media,
+                       group = raca,
+                       color = raca)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) + 
+  #ylim(c(3.5,4.5)) +
+  labs(x = "Escolaridade do pai",
+       y = "Média da proficiência em português",
+       color = "Raça",
+       title = "Proficiência em Português") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+### Raça x Proficiência em Matemática x Escolaridade do pai
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+
+# calculando a media e as barras por raca e esc_pai
+media_erros <- base_saeb |> 
+  group_by(esc_pai,raca) |> 
+  summarize(n = n(),
+         media = mean(prof_mat),
+         desvio = sd(prof_mat),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  ggplot(mapping = aes(x = esc_pai,
+                       y = media,
+                       group = raca,
+                       color = raca)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = media - erro.padrao, 
+                    ymax = media + erro.padrao), 
+                width = .1) + 
+  #ylim(c(3.5,4.5)) +
+  labs(x = "Escolaridade do pai",
+       y = "Média da proficiência em matemática",
+       color = "Raça",
+       title = "Proficiência em Matemática") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+### depADM x Proficiência em Português x Localização {.tabset}
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+
+# calculando a media e as barras por depADM e local
+media_erros <- base_saeb |> 
+  group_by(local,depADM) |> 
+  summarize(n = n(),
+         media = mean(prof_port),
+         desvio = sd(prof_port),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  ggplot(mapping = aes(x = local,
+                       y = media,
+                       group = depADM,
+                       color = depADM)) +
+  geom_point(size = 3) +
+  labs(x = "Localização",
+       y = "Média da proficiência em português",
+       color = "Dependência Administrativa",
+       title = "Proficiência em Português") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+### depADM x Proficiência em Matemática x Localização
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+
+# calculando a media e as barras por depADM e local
+media_erros <- base_saeb |> 
+  group_by(local,depADM) |> 
+  summarize(n = n(),
+         media = mean(prof_mat),
+         desvio = sd(prof_mat),
+         erro.padrao = desvio / sqrt(n))
+
+# gráfico de médias com os erros padrões
+media_erros |> 
+  ggplot(mapping = aes(x = local,
+                       y = media,
+                       group = depADM,
+                       color = depADM)) +
+  geom_point(size = 3) +
+  labs(x = "Localização",
+       y = "Média da proficiência em matemática",
+       color = "Dependência Administrativa",
+       title = "Proficiência em Matemática") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
 
 
+### Raça x Proficiência em Português {.tabset}
+
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# Boxplot por turno
+# criando um resumo do objeto survey
+media_grafico <- base_saeb |> 
+  group_by(raca) |> 
+  summarize(media = mean(prof_port, na.rm = TRUE))
+
+# criando o gráfico de barras para as médias
+media_grafico |>
+  ggplot(mapping = aes(x = raca,
+                       y = media)) +
+  geom_bar(stat = "identity", fill="lightseagreen") +
+  labs(x = "Raça",
+       y = "Média da Proficiência em Português",
+       title = "Proficiência em Português") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+```
+
+### Raça x Proficiência em Matemática {.tabset}
+
+```{r fig.align='center', echo=FALSE, message=FALSE, warning=FALSE, fig.width = 14}
+# Boxplot por turno
+# criando um resumo do objeto survey
+media_grafico <- base_saeb |> 
+  group_by(raca) |> 
+  summarize(media = mean(prof_mat, na.rm = TRUE))
+
+# criando o gráfico de barras para as médias
+media_grafico |>
+  ggplot(mapping = aes(x = raca,
+                       y = media)) +
+  geom_bar(stat = "identity", fill="lightseagreen") +
+  labs(x = "Raça",
+       y = "Média da Proficiência em Matemática",
+       title = "Proficiência em Matemática") + theme_classic() +
+  theme(legend.position = "top")  +
+  theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"),
+        text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 ```

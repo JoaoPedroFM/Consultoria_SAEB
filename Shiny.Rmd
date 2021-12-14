@@ -1,0 +1,148 @@
+---
+title: "Untitled"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+
+
+base_saeb <- readxl::read_excel("C:/Users/Igor/Documents/GitHub/Consultoria_SAEB/Base SAEB.xlsx")
+
+# dependencia administrativa
+base_saeb$depADM5EF <- factor(base_saeb$depADM5EF,levels=c(0,1,2),
+                              labels=c("Municipal","Estadual","Federal"))
+
+# escolaridade da mãe
+base_saeb$esc_mae5EF <- factor(base_saeb$esc_mae5EF,levels=c(0,1,2,3),
+                              labels=c("Até EF incompleto","EF completo","EM completo",
+                                       "Ensino superior completo ou mais"))
+# escolaridade do pai
+base_saeb$esc_pai5EF <- factor(base_saeb$esc_pai5EF,levels=c(0,1,2,3),
+                              labels=c("Até EF incompleto","EF completo","EM completo",
+                                       "Ensino superior completo ou mais"))
+
+# raça
+base_saeb$raca5EF <- factor(base_saeb$raca5EF,levels=c(0,1),
+                              labels=c("Branco","Não branco"))
+
+# turno
+base_saeb$turno5EF <- factor(base_saeb$turno5EF,levels=c(0,1,2),
+                              labels=c("Manhã","Tarde","Noite"))
+
+# local
+base_saeb$local5EF <- factor(base_saeb$local5EF,levels=c(0,1,2,3),
+                              labels=c("RJ","CE","ES","SP"))
+
+# sexo
+base_saeb$sexo <- factor(base_saeb$sexo,levels=c(0,1),
+                              labels=c("Feminino","Masculino"))
+
+# série
+base_saeb$serie <- factor(base_saeb$serie,levels=c(1,2,3),
+                              labels=c("5º ano EF","9º ano EF","3ª série EM"))
+
+base_saeb = base_saeb |> 
+  filter(serie== "5º ano EF") |> 
+  rename(depADM=depADM5EF, esc_mae= esc_mae5EF, esc_pai= esc_pai5EF, raca=raca5EF, turno=turno5EF, local=local5EF)
+
+
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+selectInput(
+  inputId = "depADM",
+  label = "Departamento",
+  choices = unique(base_saeb$depADM)
+)
+selectInput(
+  inputId = "esc_mae",
+  label = "Escolaridade da mãe",
+  choices = unique(base_saeb$esc_mae)
+)
+selectInput(
+  inputId = "esc_pai",
+  label = "Escolaridade do pai",
+  choices = unique(base_saeb$esc_pai)
+)
+selectInput(
+  inputId = "raca",
+  label = "Raça",
+  choices = unique(base_saeb$raca)
+)
+selectInput(
+  inputId = "turno",
+  label = "Turno",
+  choices = unique(base_saeb$turno)
+)
+selectInput(
+  inputId = "local",
+  label = "Local",
+  choices = unique(base_saeb$local)
+)
+selectInput(
+  inputId = "sexo",
+  label = "Sexo",
+  choices = unique(base_saeb$sexo)
+)
+
+```
+
+Column {data-width=1000, .tabset}
+-----------------------------------------------------------------------
+
+### Matemática
+
+```{r}
+renderPlot({
+  base_saeb |> 
+    filter(
+      depADM == input$depADM,
+      esc_mae == input$esc_mae,
+      esc_pai == input$esc_pai,
+      raca == input$raca,
+      turno == input$turno,
+      local == input$local,
+      sexo == input$sexo
+    ) |> 
+    ggplot(aes(x=prof_mat))+
+    geom_histogram(fill='red',
+                   col='white',
+                   bins=10)
+})
+```
+
+### Português
+
+```{r}
+renderPlot({
+  base_saeb |> 
+    filter(
+      depADM == input$depADM,
+      esc_mae == input$esc_mae,
+      esc_pai == input$esc_pai,
+      raca == input$raca,
+      turno == input$turno,
+      local == input$local,
+      sexo == input$sexo
+    ) |> 
+    ggplot(aes(x=prof_port))+
+    geom_histogram(fill='blue',
+                   col='white',
+                   bins=10)
+})
+```
+

@@ -343,3 +343,11 @@ base_aux |>
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
+
+
+
+## Modelo estatístico
+
+# Ajustando o modelo 
+fit.1 = lm(prof_port ~ depADM + esc_mae + esc_pai + raca + turno + local + sexo, data=base)
+summary(fit.1)

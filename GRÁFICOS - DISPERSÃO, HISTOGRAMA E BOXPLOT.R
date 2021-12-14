@@ -15,18 +15,18 @@ t.test(fem$prof_port, masc$prof_port) #PODE CONSIDERAR IGUAL
 
 branco = filter(base, raca == "Branco")
 nb = filter(base, raca != "Branco")
-t.test(branco$prof_mat, nb$prof_mat) #NêO PODE CONSIDERAR IGUAL
+t.test(branco$prof_mat, nb$prof_mat) #NaO PODE CONSIDERAR IGUAL
 t.test(branco$prof_port, nb$prof_port) #NAO PODE CONSIDERAR IGUAL
 
 munic = filter(base, depADM == "Municipal")
 fed = filter(base, depADM == "Federal")
 est = filter(base, depADM == 'Estadual')
-t.test(munic$prof_mat, fed$prof_mat)   # PODE CONSIDERAR IGUAL
+t.test(munic$prof_mat, fed$prof_mat)   # NAO PODE CONSIDERAR IGUAL
 t.test(munic$prof_port, fed$prof_port) # PODE CONSIDERAR IGUAL
-t.test(munic$prof_mat, est$prof_mat)   #
-t.test(munic$prof_port, est$prof_port) #
-t.test(fed$prof_mat, est$prof_mat)     #
-t.test(fed$prof_port, est_prof_port)   #
+t.test(munic$prof_mat, est$prof_mat)   # PODE CONSIDERAR IGUAL
+t.test(munic$prof_port, est$prof_port) # PODE CONSIDERAR IGUAL
+t.test(fed$prof_mat, est$prof_mat)     # nao PODE CONSIDERAR IGUAL
+t.test(fed$prof_port, est$prof_port)   # nao PODE CONSIDERAR IGUAL
 
 ce = filter(base, local == "CE")
 es = filter(base, local == "ES")
@@ -58,14 +58,18 @@ t.test(tarde$prof_mat, noite$prof_mat)   # PODE CONSIDERAR IGUAL
 
 
 
-dados = stack(base)
-bartlett.test(prof_port~esc_pai, data = dados, center =
-                  "mean")
-bartlett.test(prof_mat~esc_pai, data = dados, center =
-               "mean")
+dados = base |> 
+  select(prof_port, esc_pai)
+library(car)
+leveneTest(prof_port~esc_pai, data = dados, center =
+                  "mean") #variâncias iguais
+dados2 = base |> 
+  select(prof_mat, esc_pai)
+leveneTest(prof_mat~esc_pai, data = dados2, center =
+               "mean") # variâncias iguais
 
-oneway.test(prof_mat ~ esc_pai, data = dados, var.equal = T)
-oneway.test(prof_port ~ esc_pai, data = dados, var.equal = T)
+oneway.test(prof_mat ~ esc_pai, data = dados2, var.equal = T)    # todas as médias são iguais
+oneway.test(prof_port ~ esc_pai, data = dados, var.equal = T)    # todas as médias são iguais
 
 
 #####

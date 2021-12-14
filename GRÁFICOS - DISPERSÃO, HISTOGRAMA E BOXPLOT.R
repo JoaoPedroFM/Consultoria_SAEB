@@ -4,10 +4,10 @@ require(dplyr)
 require(gridExtra)
 base = readr::read_csv2("base_saeb.csv") 
 base = base |> 
-  mutate(turno = ordered(turno,levels=c("Manh?","Tarde","Noite"), labels=c("Manh?","Tarde","Noite")))
+  mutate(turno = ordered(turno,levels=c("Manhã","Tarde","Noite"), labels=c("Manhã","Tarde","Noite")))
 
 #####
-#TESTES ESTAT?STICOS
+#TESTES ESTATêSTICOS
 masc = filter(base, sexo == "Masculino")
 fem = filter(base, sexo != "Masculino")
 t.test(fem$prof_mat, masc$prof_mat) #PODE CONSIDERAR IGUAL
@@ -15,7 +15,7 @@ t.test(fem$prof_port, masc$prof_port) #PODE CONSIDERAR IGUAL
 
 branco = filter(base, raca == "Branco")
 nb = filter(base, raca != "Branco")
-t.test(branco$prof_mat, nb$prof_mat) #N?O PODE CONSIDERAR IGUAL
+t.test(branco$prof_mat, nb$prof_mat) #NêO PODE CONSIDERAR IGUAL
 t.test(branco$prof_port, nb$prof_port) #NAO PODE CONSIDERAR IGUAL
 
 munic = filter(base, depADM == "Municipal")
@@ -46,7 +46,7 @@ t.test(rj$prof_mat, es$prof_mat)   # PODE CONSIDERAR IGUAL
 t.test(rj$prof_port, es$prof_port) # PODE CONSIDERAR IGUAL
 
 
-manha = filter(base, turno == "Manh?")
+manha = filter(base, turno == "Manhã")
 tarde = filter(base, turno == "Tarde")
 noite = filter(base, turno == "Noite")
 t.test(manha$prof_port, tarde$prof_port) # PODE CONSIDERAR IGUAL
@@ -71,14 +71,14 @@ oneway.test(prof_port ~ esc_pai, data = dados, var.equal = T)
 #####
 #HISTOGRAMAS
 #####TURNOS (FIGURAS 1 E 2)
-#PORTUGU?S
-g1= base |> filter(turno %in% c("Manh?", "Tarde")) |>
+#PORTUGUêS
+g1= base |> filter(turno %in% c("Manhã", "Tarde")) |>
   ggplot(mapping = aes(x = prof_port)) +
   geom_histogram(fill= "darkred", col="white", bins = 8)  +
   scale_y_continuous(limits = c(0,35), breaks = seq(0,35,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em portugu?s",
-       title="Profici?ncia em portugu?s para os alunos dos turnos de manh? e tarde",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+  labs(y= "Frequência", x="Proficiência em português",
+       title="Proficiência em português para os alunos dos turnos de manhã e tarde",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
 g2= base |> filter(turno == "Noite") |>
@@ -86,20 +86,20 @@ g2= base |> filter(turno == "Noite") |>
   geom_histogram(fill= "darkred", col="white", bins = 8) +
   scale_x_continuous(breaks = seq(240, 360, 15), limits = c(242.0635, 358.0635)) +
   scale_y_continuous(limits = c(0,10), breaks = seq(0,10,2)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em portugu?s",
-       title="Profici?ncia em portugu?s para os alunos do turno da noite",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+  labs(y= "Frequência", x="Proficiência em português",
+       title="Proficiência em português para os alunos do turno da noite",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
-#MATEM?TICA
-g3= base |> filter(turno %in% c("Manh?", "Tarde")) |>
+#MATEMêTICA
+g3= base |> filter(turno %in% c("Manhã", "Tarde")) |>
   ggplot(mapping = aes(x = prof_mat)) +
   geom_histogram(fill= "darkred", col="white", bins = 10)  +
   scale_x_continuous(breaks = seq(210, 420, 30)) +
   scale_y_continuous(limits = c(0,35), breaks = seq(0,35,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em matem?tica",
-       title="Profici?ncia em matem?tica para os alunos dos turnos de manh? e tarde",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+  labs(y= "Frequência", x="Proficiência em matemática",
+       title="Proficiência em matemática para os alunos dos turnos de manhã e tarde",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
 g4= base |> filter(turno == "Noite") |>
@@ -107,22 +107,22 @@ g4= base |> filter(turno == "Noite") |>
   geom_histogram(fill= "darkred", col="white", bins = 10) +
   scale_x_continuous(breaks = seq(210, 420, 12), limits = c(210, 420)) +
   scale_y_continuous(limits = c(0,10), breaks = seq(0,10,2)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em matem?tica",
-       title="Profici?ncia em matem?tica para os alunos do turno da noite",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
+  labs(y= "Frequência", x="Proficiência em matemêtica",
+       title="Proficiência em matemática para os alunos do turno da noite",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + theme_classic()+ theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 grid.arrange(g1,g3,nrow=2)
 grid.arrange(g2,g4,nrow=2)
 
 #####SEXO (FIGURAS 3 E 4)
-#PORTUGU?S
+#PORTUGUêS
 g5= base |> filter(sexo == "Masculino") |>
   ggplot(mapping = aes(x = prof_port)) +
   geom_histogram(fill= "darkred", col="white", bins = 8)  +
   scale_y_continuous(limits = c(0,35), breaks = seq(0,35,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em portugu?s",
-       title="Profici?ncia em portugu?s para os alunos do sexo masculino",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(y= "Frequência", x="Proficiência em português",
+       title="Proficiência em português para os alunos do sexo masculino",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() + 
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -131,23 +131,23 @@ g6= base |> filter(sexo == "Feminino") |>
   ggplot(mapping = aes(x = prof_mat)) +
   geom_histogram(fill= "darkred", col="white", bins = 8)  +
   scale_y_continuous(limits = c(0,35), breaks = seq(0,35,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em portugu?s",
-       title="Profici?ncia em portugu?s para os alunos do sexo feminino",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(y= "Frequência", x="Proficiência em português",
+       title="Proficiência em português para os alunos do sexo feminino",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() + 
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
-#MATEM?TICA
+#MATEMêTICA
 g7= base |> filter(sexo == "Masculino") |>
   ggplot(mapping = aes(x = prof_mat)) +
   geom_histogram(fill= "darkred", col="white", bins = 10)  +
   scale_x_continuous(breaks = seq(210, 420, 30)) +
   scale_y_continuous(limits = c(0,25), breaks = seq(0,25,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em matem?tica",
-       title="Profici?ncia em matem?tica para os alunos do sexo masculino",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(y= "Frequência", x="Proficiência em matemática",
+       title="Proficiência em matemática para os alunos do sexo masculino",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() + 
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -158,9 +158,9 @@ g8= base |> filter(sexo == "Feminino") |>
   geom_histogram(fill= "darkred", col="white", bins = 10)  +
   scale_x_continuous(breaks = seq(210, 420, 30)) +
   scale_y_continuous(limits = c(0,25), breaks = seq(0,25,5)) +
-  labs(y= "Frequ?ncia", x="Profici?ncia em matem?tica",
-       title="Profici?ncia em matem?tica para os alunos do sexo feminino",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(y= "Frequência", x="Proficiência em matemática",
+       title="Proficiência em matemêtica para os alunos do sexo feminino",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() + 
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -169,13 +169,13 @@ grid.arrange(g5,g7,nrow=2)
 grid.arrange(g6,g8,nrow=2)
 
 #####
-#DISPERS?O
+#DISPERSêO
 #ESTADO
 ggplot(base, aes(x = prof_port, y = prof_mat, colour = local)) +
   geom_point() + 
   theme_classic() +
-  labs(x = "Profici?ncia em Portugu?s", y = "Profici?ncia em Matem?tica", title = "Rela??o de profici?ncia de portugu?s e 
-       matem?tica segundo estado", colour = "Localiza??o") +
+  labs(x = "Proficiência em Português", y = "Proficiência em Matemática", title = "Relação de proficiência de português e 
+       matemática segundo estado", colour = "Localização") +
   theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
@@ -183,8 +183,8 @@ ggplot(base, aes(x = prof_port, y = prof_mat, colour = local)) +
 ggplot(base, aes(x = prof_port, y = prof_mat, colour = sexo)) +
   geom_point() + 
   theme_classic() +
-  labs(x = "Profici?ncia em Portugu?s", y = "Profici?ncia em Matem?tica", title = "Rela??o de profici?ncia de portugu?s e 
-       matem?tica segundo sexo", colour = "Sexo") +
+  labs(x = "Proficiência em Português", y = "Proficiência em Matemática", title = "Relação de proficiência de português e 
+       matemática segundo sexo", colour = "Sexo") +
   theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
@@ -192,8 +192,8 @@ ggplot(base, aes(x = prof_port, y = prof_mat, colour = sexo)) +
 ggplot(base, aes(x = prof_port, y = prof_mat, colour = turno)) +
   geom_point() + 
   theme_classic() +
-  labs(x = "Profici?ncia em Portugu?s", y = "Profici?ncia em Matem?tica", title = "Rela??o de profici?ncia de portugu?s e 
-       matem?tica segundo turno", colour = "Turno") +
+  labs(x = "Proficiência em Português", y = "Proficiência em Matemática", title = "Relação de proficiência de português e 
+       matemática segundo turno", colour = "Turno") +
   theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
@@ -201,17 +201,17 @@ ggplot(base, aes(x = prof_port, y = prof_mat, colour = turno)) +
 ggplot(base_aux, aes(x = prof_port, y = prof_mat, colour = depADM)) +
   geom_point() + 
   theme_classic() +
-  labs(x = "Profici?ncia em Portugu?s", y = "Profici?ncia em Matem?tica", title = "Rela??o de profici?ncia de portugu?s e 
-       matem?tica segundo depend?ncia administrativa", colour = "Depend?ncia Administrativa") +
+  labs(x = "Proficiência em Português", y = "Proficiência em Matemática", title = "Relação de proficiência de português e 
+       matemática segundo dependência administrativa", colour = "Dependência Administrativa") +
   theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
-#ra?a
+#raêa
 ggplot(base, aes(x = prof_port, y = prof_mat, colour = raca)) +
   geom_point() + 
   theme_classic() +
-  labs(x = "Profici?ncia em Portugu?s", y = "Profici?ncia em Matem?tica", title = "Rela??o de profici?ncia de portugu?s e 
-       matem?tica segundo ra?a", colour = "Ra?a") +
+  labs(x = "Proficiência em Português", y = "Proficiência em Matemática", title = "Relação de proficiência de português e 
+       matemática segundo raêa", colour = "Raça") +
   theme(plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
@@ -223,8 +223,8 @@ ggplot(base, aes(x = prof_port, y = prof_mat, colour = raca)) +
 base |> 
   ggplot(mapping = aes(y = prof_port, x = factor(turno))) +
   geom_boxplot(fill = c("blue", "yellow", "purple")) +
-  labs(x = "Turno", y = "Profici?ncia em portugu?s", title="Profici?ncia em portugu?s segundo turno",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") +
+  labs(x = "Turno", y = "Proficiência em português", title="Proficiência em português segundo turno",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") +
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -233,8 +233,8 @@ base |>
 base |> 
   ggplot(mapping = aes(y = prof_mat, x = factor(turno))) +
   geom_boxplot(fill = c("blue", "yellow", "purple")) +
-  labs(x = "Turno", y = "Profici?ncia em matem?tica", title="Profici?ncia em matem?tica segundo turno",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") +
+  labs(x = "Turno", y = "Proficiência em matemática", title="Proficiência em matemática segundo turno",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") +
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -244,8 +244,8 @@ base |>
 base |> 
   ggplot(mapping = aes(y = prof_port, x = factor(sexo, labels = c("Feminino","Masculino")))) +
   geom_boxplot(fill = c("pink", "blue")) +
-  labs(x = "Sexo", y = "Profici?ncia em portugu?s", title="Profici?ncia em portugu?s segundo sexo",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Sexo", y = "Proficiência em português", title="Proficiência em português segundo sexo",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -255,8 +255,8 @@ base |>
 base |> 
   ggplot(mapping = aes(y = prof_mat, x = factor(sexo, labels = c("Feminino","Masculino")))) +
   geom_boxplot(fill = c("pink", "blue")) +
-  labs(x = "Sexo", y = "Profici?ncia em matem?tica", title="Profici?ncia em matem?tica segundo sexo",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Sexo", y = "Proficiência em matemática", title="Proficiência em matemática segundo sexo",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -267,42 +267,42 @@ base |>
 base |> 
   ggplot(mapping = aes(y = prof_port, x = factor(local))) +
   geom_boxplot(fill = c("red", "blue", "yellow", "green")) +
-  labs(x = "Estado", y = "Profici?ncia em portugu?s", title="Profici?ncia em portugu?s segundo sexo",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Estado", y = "Proficiência em português", title="Proficiência em português segundo sexo",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
-#matem?tica
+#matemêtica
 base |> 
   ggplot(mapping = aes(y = prof_mat, x = factor(local))) +
   geom_boxplot(fill = c("red", "blue", "yellow", "green")) +
-  labs(x = "Estado", y = "Profici?ncia em matem?tica", title="Profici?ncia em matem?tica segundo estado",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Estado", y = "Proficiência em matemática", title="Proficiência em matemática segundo estado",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
-####RA?A (FIGURAS 9 E 10)
+####RAêA (FIGURAS 9 E 10)
 #portugues
 base |> 
   ggplot(mapping = aes(y = prof_port, x = factor(raca))) +
   geom_boxplot(fill = c("white", "black")) +
-  labs(x = "Ra?a", y = "Profici?ncia em portugu?s", title="Profici?ncia em portugu?s segundo ra?a",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Raêa", y = "Proficiência em português", title="Proficiência em português segundo raça",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
 
 
-#matem?tica
+#matemêtica
 base |> 
   ggplot(mapping = aes(y = prof_mat, x = factor(raca))) +
   geom_boxplot(fill = c("white", "black")) +
-  labs(x = "Ra?a", y = "Profici?ncia em matem?tica", title="Profici?ncia em matem?tica segundo ra?a",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Raêa", y = "Proficiência em matemática", title="Proficiência em matemática segundo raça",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -323,8 +323,8 @@ for (i in 1:76){
 base_aux |>
   ggplot(mapping = aes(y = prof_port, x = factor(depADM))) +
   geom_boxplot(fill = c("red", "blue")) +
-  labs(x = "Depend?ncia administrativa", y = "Profici?ncia em portugu?s", title="Profici?ncia em portugu?s segundo depend?ncia administrativa",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Dependência administrativa", y = "Proficiência em português", title="Proficiência em português segundo dependência administrativa",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
@@ -333,8 +333,8 @@ base_aux |>
 base_aux |>
   ggplot(mapping = aes(y = prof_mat, x = factor(depADM))) +
   geom_boxplot(fill = c("red", "blue")) +
-  labs(x = "Depend?ncia administrativa", y = "Profici?ncia em matem?tica", title="Profici?ncia em matem?tica segundo depend?ncia administrativa",
-       subtitle="Dados referentes aos realizantes do SAEB 2017 (5? ano)") + 
+  labs(x = "Dependência administrativa", y = "Proficiência em matemática", title="Proficiência em matemática segundo dependência administrativa",
+       subtitle="Dados referentes aos realizantes do SAEB 2017 (5º ano)") + 
   theme_classic() +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5, size=14, face="bold"), 
         text = element_text(size=15), plot.subtitle = element_text(hjust = 0.5, size=12))
